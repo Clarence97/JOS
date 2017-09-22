@@ -1,0 +1,96 @@
+diff --git a/GNUmakefile b/GNUmakefile
+index 1af2ab7..190610b 100644
+--- a/GNUmakefile
++++ b/GNUmakefile
+@@ -307,7 +307,7 @@ warn:
+ 	echo "this is the 2016 6.828 lab"; \
+ 	echo "******* WARNING ********* [39m"; \
+ 	echo; \
+-	false;
++	#false;
+ 
+ #handin-prep:
+ #	@./handin-prep
+diff --git a/conf/env.mk b/conf/env.mk
+index a603f9e..4b1fefc 100644
+--- a/conf/env.mk
++++ b/conf/env.mk
+@@ -17,4 +17,4 @@ V = @
+ # If the makefile cannot find your QEMU binary, uncomment the
+ # following line and set it to the full path to QEMU.
+ #
+-# QEMU=
++QEMU=/home/tianjingjing/Documents/JOSlabs/QEMU/bin/qemu-system-x86_64
+diff --git a/kern/kdebug.c b/kern/kdebug.c
+index 9547143..dc56edc 100644
+--- a/kern/kdebug.c
++++ b/kern/kdebug.c
+@@ -179,7 +179,8 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
+ 	//	Look at the STABS documentation and <inc/stab.h> to find
+ 	//	which one.
+ 	// Your code here.
+-
++	stab_binsearch(stabs, &lline, &rline, N_SLINE, addr);
++	info->eip_line = stabs[lline].n_desc;
+ 
+ 	// Search backwards from the line number for the relevant filename
+ 	// stab.
+diff --git a/kern/monitor.c b/kern/monitor.c
+index e137e92..46257ae 100644
+--- a/kern/monitor.c
++++ b/kern/monitor.c
+@@ -58,11 +58,24 @@ int
+ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
+ {
+ 	// Your code here.
++	cprintf("Stack backtrace:\n");
++	unsigned int* ebp = (unsigned int*)read_ebp();
++	while(ebp != 0){
++		unsigned int eip = *(ebp + 1);
++		struct Eipdebuginfo info;
++		debuginfo_eip(eip, &info);
++		cprintf("  ebp %08x  eip %08x  args %08x %08x %08x %08x %08x\n", ebp, eip, \
++			*(ebp + 2), *(ebp + 3), *(ebp + 4), *(ebp + 5), *(ebp + 6));
++		cprintf("         ");
++		cprintf("%s:", info.eip_file);
++		cprintf("%u: ", info.eip_line);
++		cprintf("%.*s+%d\n", info.eip_fn_namelen, info.eip_fn_name, eip - info.eip_fn_addr);
++		ebp = (unsigned int*)*ebp;
++	}
+ 	return 0;
+ }
+ 
+ 
+-
+ /***** Kernel monitor command interpreter *****/
+ 
+ #define WHITESPACE "\t\r\n "
+@@ -115,6 +128,10 @@ monitor(struct Trapframe *tf)
+ 	cprintf("Welcome to the JOS kernel monitor!\n");
+ 	cprintf("Type 'help' for a list of commands.\n");
+ 
++        //unsigned int i = 0x00646c72;
++        //cprintf("x=%d, y=%d", 3);
++        //int x = 1, y = 3, z = 4;
++        //cprintf("x %d, y %x, z %d\n", x, y, z);
+ 
+ 	while (1) {
+ 		buf = readline("K> ");
+diff --git a/lib/printfmt.c b/lib/printfmt.c
+index 28e01c9..1484c12 100644
+--- a/lib/printfmt.c
++++ b/lib/printfmt.c
+@@ -206,10 +206,9 @@ vprintfmt(void (*putch)(int, void*), void *putdat, const char *fmt, va_list ap)
+ 		// (unsigned) octal
+ 		case 'o':
+ 			// Replace this with your code.
+-			putch('X', putdat);
+-			putch('X', putdat);
+-			putch('X', putdat);
+-			break;
++                        num = getuint(&ap, lflag);
++                        base = 8;
++                        goto number;
+ 
+ 		// pointer
+ 		case 'p':
