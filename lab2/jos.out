@@ -1,0 +1,21 @@
+[31m******* WARNING *********
+this is the 2016 6.828 lab
+******* WARNING ********* [39m
+
+***
+*** Now run 'make gdb'.
+***
+6828 decimal is 15254 octal!
+Physical memory: 131072K available, base = 640K, extended = 130432K
+address of pages: f0159000
+number of PageInfos: 32768
+value of EXTPHYSMEM: 100000
+IOHole: 409
+check_page_alloc() succeeded!
+check_page() succeeded!
+check_kern_pgdir() succeeded!
+check_page_installed_pgdir() succeeded!
+Welcome to the JOS kernel monitor!
+Type 'help' for a list of commands.
+x 1, y 3, z 4
+qemu: terminating on signal 15 from pid 34804
